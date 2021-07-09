@@ -213,6 +213,8 @@ bool WiFiClientSecureCtx::flush(unsigned int maxWaitMs) {
 
 int WiFiClientSecureCtx::connect(IPAddress ip, uint16_t port) {
   if (!WiFiClient::connect(ip, port)) {
+    //VH: remove
+    Serial.printf("WCSCtx::connect failed: timeout %lums\n", _timeout);
     return 0;
   }
   return _connectSSL(nullptr);
@@ -1410,17 +1412,17 @@ int WiFiClientSecureCtx::getLastSSLError(char *dest, size_t len) {
   return err;
 }
 
-bool WiFiClientSecure::probeMaxFragmentLength(const char* name, uint16_t port, uint16_t len) {
+bool WiFiClientSecure::probeMaxFragmentLength(const char* name, uint16_t port, uint16_t len, uint16_t timeout) {
   IPAddress remote_addr;
-  if (!WiFi.hostByName(name, remote_addr)) {
+  if (!WiFi.hostByName(name, remote_addr, timeout)) {
     DEBUG_BSSL("probeMaxFragmentLength: Can't resolve host\n");
     return false;
   }
-  return WiFiClientSecure::probeMaxFragmentLength(remote_addr, port, len);
+  return WiFiClientSecure::probeMaxFragmentLength(remote_addr, port, len, timeout);
 }
 
-bool WiFiClientSecure::probeMaxFragmentLength(const String& host, uint16_t port, uint16_t len) {
-  return WiFiClientSecure::probeMaxFragmentLength(host.c_str(), port, len);
+bool WiFiClientSecure::probeMaxFragmentLength(const String& host, uint16_t port, uint16_t len, uint16_t timeout) {
+  return WiFiClientSecure::probeMaxFragmentLength(host.c_str(), port, len, timeout);
 }
 
 
@@ -1456,10 +1458,10 @@ static bool _SendAbort(WiFiClient& probe, bool supportsLen) {
 // TODO - Check the type of returned extensions and that the MFL is the exact
 //      same one we sent.  Not critical as only horribly broken servers would
 //      return changed or add their own extensions.
-bool WiFiClientSecure::probeMaxFragmentLength(IPAddress ip, uint16_t port, uint16_t len) {
+bool WiFiClientSecure::probeMaxFragmentLength(IPAddress ip, uint16_t port, uint16_t len, uint16_t timeout) {
   // Hardcoded TLS 1.2 packets used throughout
   static const uint8_t clientHelloHead_P[] PROGMEM = {
-    0x16, 0x03, 0x03, 0x00, 0, // TLS header, change last 2 bytes to len
+       0x16, 0x03, 0x03, 0x00, 0, // TLS header, change last 2 bytes to len
     0x01, 0x00, 0x00, 0, // Last 3 bytes == length
     0x03, 0x03, // Proto version TLS 1.2
     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, // Random (gmtime + rand[28])
@@ -1520,6 +1522,8 @@ bool WiFiClientSecure::probeMaxFragmentLength(IPAddress ip, uint16_t port, uint1
   clientHello[8] = (ttlLen - 5 - 4) & 0xff;
 
   WiFiClient probe;
+  //VH: remove
+  probe.setTimeout(timeout);
   probe.connect(ip, port);
   if (!probe.connected()) {
     delete[] clientHello;

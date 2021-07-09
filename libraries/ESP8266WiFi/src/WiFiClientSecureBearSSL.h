@@ -239,9 +239,10 @@ class WiFiClientSecure : public WiFiClient {
     WiFiClientSecure& operator=(const WiFiClientSecure&) = default; // The shared-ptrs handle themselves automatically
 
     uint8_t status() override { return _ctx->status(); }
-    int connect(IPAddress ip, uint16_t port) override { return _ctx->connect(ip, port); }
-    int connect(const String& host, uint16_t port) override { return _ctx->connect(host, port); }
-    int connect(const char* name, uint16_t port) override { return _ctx->connect(name, port); }
+    //VH: remove
+    int connect(IPAddress ip, uint16_t port) override { _ctx->setTimeout(_timeout); return _ctx->connect(ip, port); }
+    int connect(const String& host, uint16_t port) override { _ctx->setTimeout(_timeout); return _ctx->connect(host, port); }
+    int connect(const char* name, uint16_t port) override { _ctx->setTimeout(_timeout); return _ctx->connect(name, port); }
 
     uint8_t connected() override { return _ctx->connected(); }
     size_t write(const uint8_t *buf, size_t size) override { return _ctx->write(buf, size); }
@@ -312,9 +313,9 @@ class WiFiClientSecure : public WiFiClient {
     bool setSSLVersion(uint32_t min = BR_TLS10, uint32_t max = BR_TLS12) { return _ctx->setSSLVersion(min, max); };    
     
     // Check for Maximum Fragment Length support for given len before connection (possibly insecure)
-    static bool probeMaxFragmentLength(IPAddress ip, uint16_t port, uint16_t len);
-    static bool probeMaxFragmentLength(const char *hostname, uint16_t port, uint16_t len);
-    static bool probeMaxFragmentLength(const String& host, uint16_t port, uint16_t len);
+    static bool probeMaxFragmentLength(IPAddress ip, uint16_t port, uint16_t len, uint16_t timeout = 5000);
+    static bool probeMaxFragmentLength(const char *hostname, uint16_t port, uint16_t len, uint16_t timeout = 5000);
+    static bool probeMaxFragmentLength(const String& host, uint16_t port, uint16_t len, uint16_t timeout = 5000);
 
     // peek buffer API is present
     virtual bool hasPeekBufferAPI () const override { return true; }

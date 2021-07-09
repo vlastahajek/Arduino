@@ -145,6 +145,8 @@ public:
         }
         _connect_pending = true;
         _op_start_time = millis();
+        //VH: remove
+        Serial.printf("CCtx::connect timeout: %dms\n", _timeout_ms);
         for (decltype(_timeout_ms) i = 0; _connect_pending && i < _timeout_ms; i++) {
                // Give scheduled functions a chance to run (e.g. Ethernet uses recurrent)
                delay(1);
@@ -190,6 +192,8 @@ public:
 
     void setTimeout(int timeout_ms)
     {
+        //VH: remove
+        Serial.printf("CCtx::setTimeout: %d\n", timeout_ms);
         _timeout_ms = timeout_ms;
     }
 
